@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+      <title>聊天室</title>
+      <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+
+    <div id="username-page">
+        <div class="username-page-container">
+            <h1 class="title">输入您本次聊天的姓名以及您聊天对象的姓名</h1>
+                <div class="form-group">
+                    <input type="text" id="userId" placeholder="您的姓名"  class="form-control" />
+                </div>
+                  <div class="form-group">
+                    <input type="text" id="toUserId" placeholder="对象姓名"  class="form-control" />
+                </div>
+                <div class="form-group">
+                    <button type="submit" onclick="openSocket()" class="accent username-submit">开始聊天</button>
+                </div>
+        </div>
+    </div>
+    
+     <div id="chat-page" class="hidden">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>聊天室</h2>
+            </div>
+            <!--  <div id="connecting">
+            </div>-->
+            <ul id="connecting">
+
+            </ul>
+            
+            <div class="messageForm">  
+                <div class="form-group">
+                    <div class="input-group clearfix">
+                        <input type="text" id="contentText" placeholder="请输入内容......"  class="form-control"/>
+                        <button type="submit" class="primary" onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+        	</div>
+    </div>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+<script>
+    var socket;
+    function openSocket() {
+        if(typeof(WebSocket) == "undefined") {
+            console.log("您的浏览器不支持WebSocket");
+        }else{
+            console.log("您的浏览器支持WebSocket");
+            //实现化WebSocket对象，指定要连接的服务器地址与端口  建立连接
+            //等同于socket = new WebSocket("ws://localhost:8888/xxxx/im/25");
+            //var socketUrl="${request.contextPath}/im/"+$("#userId").val();
+            var socketUrl="http://localhost:8081/imserver/"+$("#userId").val()+"/"+$("#toUserId").val();
+            socketUrl=socketUrl.replace("https","ws").replace("http","ws");
+            console.log(socketUrl);
+            if(socket!=null){
+                socket.close();
+                socket=null;
+            }
+            socket = new WebSocket(socketUrl);
+            
+            //打开事件
+            socket.onopen = function() {
+                console.log("websocket已打开");
+                //socket.send("这是来自客户端的消息" + location.href + new Date());
+            };
+            // 切换页面
+            var usernamePage = document.querySelector('#username-page');
+			var chatPage = document.querySelector('#chat-page');
+            usernamePage.classList.add('hidden');
+       		chatPage.classList.remove('hidden');
+       		
+            //获得消息事件
+            socket.onmessage = function(msg) {
+                console.log(msg.data);
+                setMessageInnerHTML(msg.data);
+                //发现消息进入    开始处理前端触发逻辑
+            };
+            
+            //关闭事件
+            socket.onclose = function() {
+                console.log("websocket已关闭");
+            };
+            
+            //发生了错误事件
+            socket.onerror = function() {
+                console.log("websocket发生了错误");
+            }
+        }
+    }
+    function sendMessage() {
+        if(typeof(WebSocket) == "undefined") {
+            console.log("您的浏览器不支持WebSocket");
+        }else {
+            console.log("您的浏览器支持WebSocket");
+            console.log('{"toUserId":"'+$("#toUserId").val()+'","contentText":"'+$("#contentText").val()+'"}');
+            socket.send('{"toUserId":"'+$("#toUserId").val()+'","contentText":"'+$("#contentText").val()+'"}');
+        }
+    }
+    //将消息显示在网页上
+    function setMessageInnerHTML(innerHTML) {
+		var obj = JSON.parse(innerHTML);
+		var date = new Date();
+        document.getElementById('connecting').innerHTML += obj.fromUserId+ "：" + obj.contentText+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+date.getFullYear() + "/" + (date.getMonth()+1)
+         + "/" +date.getDate() + "/" + " "+date.getHours() + ":"+date.getMinutes() + ":"+ date.getSeconds() +'<br/>';
+    }
+    
+</script>
+</html>
