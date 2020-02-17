@@ -1,0 +1,15 @@
+﻿server:
+  port: 8081
+debug: true
+spring:
+  devtools:
+    restart:
+      enabled: true  #设置开启热部署
+#添加Thymeleaf配置
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    encoding: UTF-8
+    servlet:      content-type: text/html
